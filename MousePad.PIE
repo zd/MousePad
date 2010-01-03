@@ -1,0 +1,135 @@
+/********************************************************************\
+*                                                                    *
+*   This script makes it possible to use a second mouse              *
+*   in games that accept Gamepad-Input.                              *
+*   This is realized by passing Mouse-Input to the Analog-Stick      *
+*   of a virtual gamepad.                                            *
+*   Virtual Gamepad: PPJoy: http://ppjoy.blogspot.com/               *
+*                                                                    *
+*   At the moment (GlovePIE 0.29 or 0.30) it is NOT possible         *
+*   to combine input from the second mouse and a (second) keyboard   *
+*   (and pass both to the PPJoy Gamepad) (BUG?!)                     *
+*         => Workaround used in this config:                         *
+*    A real gamepad is still used for movement/action control,       *
+*    while aiming is controlled by the second mouse.                 *
+*                                                                    *
+*    You can use this script in combination with MousePad.cfg        *
+*    in Left for Dead (2) to control the second player with a        *
+*    second mouse and a second gamepad.                              *
+*    You need to have 2 gamepads, as the first Gamepad is ALWAYS     *
+*    used to control Player1 movement in L4D                         *
+*    (Perhaps 1 real Gamepad would be enough, if you create          *
+*     2 PPJoy-Pads ... but this is just an untested idea)            *
+*                                                                    *
+*    To check if mouse2 input is passed correctly to the             *
+*    PPJoyGamepad, have a look at Window's GameController Settings   *
+*                                                                    *
+\********************************************************************/
+
+var.gamepad = true // use mouse2 in combination with a gamepad
+var.keyboard = false // not implemented as it is not possible with GlovePIE 0.29/0.30
+
+// Only mouse1 controls the cursor
+mouse.Swallow = true
+mouse.DirectInputX = mouse.DirectInputX + Delta(mouse1.DirectInputX)
+mouse.DirectInputY = mouse.DirectInputY + Delta(mouse1.DirectInputY)
+mouse.LeftButton = mouse1.LeftButton
+mouse.RightButton = mouse1.RightButton
+mouse.MiddleButton = mouse1.MiddleButton
+mouse.XButton1 = mouse1.XButton1
+mouse.XButton2 = mouse1.XButton2
+mouse.Button6 = mouse1.Button6
+mouse.Button7 = mouse1.Button7
+mouse.Button8 = mouse1.Button8
+
+// is mouse2 present?
+if mouse2.present then
+
+  // Mouse2 Buttons are passed to PPJoyButtons
+  PPJoy2.Digital0 = mouse2.LeftButton
+  PPJoy2.Digital1 = mouse2.RightButton
+  PPJoy2.Digital2 = mouse2.MiddleButton
+
+  if var.gamepad then
+     /* ***
+     *   bind second gampad pov/buttons to ppjoy buttons (to control movement etc.)
+     *   I know- mapping buttons from a second keyboard would be better- but somehow that doensn't work
+     *   If you do something like:
+     *   "PPJoy2.Digital7 = Keyboard.NUMPADPLUS"
+     *   The Second Mouse suddenly moves the first mouse again!
+     *   ... I guess it's a bug in glovepie 0.29 ... :/
+     *   ... so until this gets fixed - you have to use another (real) gamepad to control the second player!
+     *** */
+
+     /* ***
+     *   if you use this script to control the second player in Left for Dead (2),
+     *   by using MousePad.cfg in L4D (which maps L4D-Actions to PPJoy Buttons:
+     *
+     *   PPJoy2.Analog4 == joy_advaxisu inside MousePad.cfg (set to 1 == (move forward and back))
+     *   PPJoy2.Analog5 == joy_advaxisr inside MousePad.cfg (set to 3 == (strafing left and right))
+     *** */
+
+     PPJoy2.Analog4 = Joystick1.y
+     PPJoy2.Analog5 = Joystick1.x
+     PPJoy2.Digital7 = Joystick1.Button1
+     PPJoy2.Digital8 = Joystick1.Button2
+     PPJoy2.Digital9 = Joystick1.Button3
+     PPJoy2.Digital10 = Joystick1.Button4
+     PPJoy2.Digital11 = Joystick1.Button5
+     PPJoy2.Digital12 = Joystick1.Button6
+     PPJoy2.Digital13 = Joystick1.Button7
+     PPJoy2.Digital14 = Joystick1.Button8
+     PPJoy2.Digital15 = Joystick1.Button9
+  endif
+
+  var.deltax2 = Delta(mouse2.DirectInputX)
+  var.deltay2 = Delta(mouse2.DirectInputY)
+
+  /* ***
+  *  The following part is a 1:1 copy from GlovePIE's MouseParty.PIE Script
+  *  Thank you unknown coder! :D
+  *** */
+
+  // Mouse ballistics attempt
+  var.velocity = ([(smooth(var.deltaX2) / 24ms) in inches per second, (smooth(var.deltaY2) / 24ms) in inches per second] )
+  var.speed = |var.velocity|
+  if var.speed <= 0.2 then
+    var.deltax2 = var.deltax2 * 2
+    var.deltay2 = var.deltay2 * 2
+  endif
+  if var.speed > 0.2 and var.speed <= 0.4 then
+    var.deltax2 = var.deltax2 * 4
+    var.deltay2 = var.deltay2 * 4
+  endif
+  if var.speed > 0.4 and var.speed <= 1.25 then
+    var.deltax2 = var.deltax2 * 7
+    var.deltay2 = var.deltay2 * 7
+  endif
+  if var.speed > 1.25 and var.speed <= 3.9 then
+    var.deltax2 = var.deltax2 *12 //* 7
+    var.deltay2 = var.deltay2 *12 //* 7
+  endif
+  if var.speed > 3.9 then
+    var.deltax2 = var.deltax2 * 20// * 13.77
+    var.deltay2 = var.deltay2 * 20// * 13.77
+  endif
+  var.Mouse2x = var.Mouse2x pixels + (var.deltax2 in pixels)
+  var.Mouse2y = var.Mouse2y pixels + (var.deltay2 in pixels)
+  if var.Mouse2x < screen.DesktopLeft then var.Mouse2x = screen.DesktopLeft
+  if var.Mouse2x > screen.DesktopRight then var.Mouse2x = screen.DesktopRight
+  if var.Mouse2y < screen.DesktopTop then var.Mouse2y = screen.DesktopTop
+  if var.Mouse2y > screen.DesktopBottom then var.Mouse2y = screen.DesktopBottom
+
+  /* ***
+  * When using MousePad.cfg in L4D:
+  * PPJoy2.Analog0 == joy_advaxisx inside MousePad.cfg (set to 4 == (look left and right))
+  * PPJoy2.Analog1 == joy_advaxisy inside MousePad.cfg (set to 2 == (look up and down))
+  *** */
+  PPJoy2.Analog0 = MapRange(var.deltax2, (-1279),1279, (-1),1)
+  PPJoy2.Analog1 = MapRange(var.deltay2, (-1023),1023, (-1),1)
+
+  // shows mouse movement debug information
+  debug = 'PPJoy Analog Input (from mouse2) - dx: ' + PPJoy2.Analog0 + ' | dy: ' + PPJoy2.Analog1
+
+endif
+
