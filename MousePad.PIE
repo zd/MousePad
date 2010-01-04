@@ -1,4 +1,6 @@
-/********************************************************************\
+﻿/********************************************************************\
+*   v0.2 by zd_                                                      *
+*   designed for use with GlovePIE 0.41                              *
 *                                                                    *
 *   This script makes it possible to use a second mouse              *
 *   in games that accept Gamepad-Input.                              *
@@ -6,28 +8,31 @@
 *   of a virtual gamepad.                                            *
 *   Virtual Gamepad: PPJoy: http://ppjoy.blogspot.com/               *
 *                                                                    *
-*   At the moment (GlovePIE 0.29 or 0.30) it is NOT possible         *
-*   to combine input from the second mouse and a (second) keyboard   *
-*   (and pass both to the PPJoy Gamepad) (BUG?!)                     *
-*         => Workaround used in this config:                         *
-*    A real gamepad is still used for movement/action control,       *
-*    while aiming is controlled by the second mouse.                 *
 *                                                                    *
-*    You can use this script in combination with MousePad.cfg        *
+*    You can use this script in combination with MousePad_l4d2.cfg   *
+*    ( http://github.com/zd/MousePad/raw/master/MousePad_l4d2.cfg )  *
 *    in Left for Dead (2) to control the second player with a        *
-*    second mouse and a second gamepad.                              *
-*    You need to have 2 gamepads, as the first Gamepad is ALWAYS     *
-*    used to control Player1 movement in L4D                         *
-*    (Perhaps 1 real Gamepad would be enough, if you create          *
-*     2 PPJoy-Pads ... but this is just an untested idea)            *
+*    second mouse and a second keyboard.                             *
+*    Forum Post:                                                     *
+*    http://forums.steampowered.com/forums/showthread.php?t=1096997  *
 *                                                                    *
 *    To check if mouse2 input is passed correctly to the             *
-*    PPJoyGamepad, have a look at Window's GameController Settings   *
+*    PPJoyGamepad, have a look at Window's GameController Settings.  *
+*                                                                    *
+*    Chose your Button-config by setting var.config below            *
+*    You can edit the mapped buttons starting from line 74           *
 *                                                                    *
 \********************************************************************/
 
-var.gamepad = true // use mouse2 in combination with a gamepad
-var.keyboard = false // not implemented as it is not possible with GlovePIE 0.29/0.30
+
+/***** Chose Button Mapping *****\
+* var.config = 0 : use mouse2 in combination with a gamepad (for movement) - this is the only way to get things running in GlovePIE prior to v0.41
+* var.config = 1 : player2 movement is mapped to numpad of keyboard1
+* var.config = 2 : player2 movement is mapped to numpad of keyboard2 - WARNING: player2's keys must not be the same as player1 keys, otherwise they will move P1 as well
+                   ... as I wasn't successfull in getting keyboard.swallow to work like mouse.swallow ...
+\********************************/
+var.config = 2
+
 
 // Only mouse1 controls the cursor
 mouse.Swallow = true
@@ -50,23 +55,20 @@ if mouse2.present then
   PPJoy2.Digital1 = mouse2.RightButton
   PPJoy2.Digital2 = mouse2.MiddleButton
 
-  if var.gamepad then
-     /* ***
-     *   bind second gampad pov/buttons to ppjoy buttons (to control movement etc.)
-     *   I know- mapping buttons from a second keyboard would be better- but somehow that doensn't work
-     *   If you do something like:
-     *   "PPJoy2.Digital7 = Keyboard.NUMPADPLUS"
-     *   The Second Mouse suddenly moves the first mouse again!
-     *   ... I guess it's a bug in glovepie 0.29 ... :/
-     *   ... so until this gets fixed - you have to use another (real) gamepad to control the second player!
-     *** */
-
      /* ***
      *   if you use this script to control the second player in Left for Dead (2),
-     *   by using MousePad.cfg in L4D (which maps L4D-Actions to PPJoy Buttons:
+     *   by using MousePad_l4d2.cfg in L4D (which maps L4D-Actions to PPJoy Buttons):
      *
      *   PPJoy2.Analog4 == joy_advaxisu inside MousePad.cfg (set to 1 == (move forward and back))
      *   PPJoy2.Analog5 == joy_advaxisr inside MousePad.cfg (set to 3 == (strafing left and right))
+     *** */
+
+  if var.config = 0 then
+     /* ***
+     *   If you do something like:
+     *   "PPJoy2.Digital7 = Keyboard.NUMPADPLUS" in GlovePIE Versions prior to 0.41
+     *   the second mouse suddenly moves the first mouse (cursor) again!
+     *   => you have to use a real gamepad to control the second player
      *** */
 
      PPJoy2.Analog4 = Joystick1.y
@@ -80,6 +82,43 @@ if mouse2.present then
      PPJoy2.Digital13 = Joystick1.Button7
      PPJoy2.Digital14 = Joystick1.Button8
      PPJoy2.Digital15 = Joystick1.Button9
+  endif
+
+  if var.config = 1 then
+     // works with GlovePIE 0.41
+     if not PPJoy2.Analog4 = -1 then PPJoy2.Analog4 = Keyboard.NUMPAD5
+     if not PPJoy2.Analog4 = 1 then PPJoy2.Analog4 = -Keyboard.NUMPAD8
+     if not PPJoy2.Analog5 = -1 then PPJoy2.Analog5 = Keyboard.NUMPAD6
+     if not PPJoy2.Analog5 = 1 then PPJoy2.Analog5 = -Keyboard.NUMPAD4
+     PPJoy2.Digital2 = Keyboard.NUMPADPLUS
+     PPJoy2.Digital7 = Keyboard.Divide
+     PPJoy2.Digital8 = Keyboard.Multiply
+     PPJoy2.Digital9 = Keyboard.NUMPAD0
+     PPJoy2.Digital10 = Keyboard.NUMPADDOT
+     PPJoy2.Digital11 = Keyboard.NUMPADENTER
+     PPJoy2.Digital12 = Keyboard.End
+     PPJoy2.Digital13 = Keyboard.NUMPADMINUS
+     PPJoy2.Digital14 = Keyboard.Pageup
+     PPJoy2.Digital15 = Keyboard.Pagedown
+
+  endif
+
+  if var.config = 2 then
+     // works with GlovePIE 0.41
+     if not PPJoy2.Analog4 = -1 then PPJoy2.Analog4 = Keyboard.NUMPAD5
+     if not PPJoy2.Analog4 = 1 then PPJoy2.Analog4 = -Keyboard.NUMPAD8
+     if not PPJoy2.Analog5 = -1 then PPJoy2.Analog5 = Keyboard.NUMPAD6
+     if not PPJoy2.Analog5 = 1 then PPJoy2.Analog5 = -Keyboard.NUMPAD4
+     PPJoy2.Digital2 = Keyboard2.NUMPADPLUS
+     PPJoy2.Digital7 = Keyboard2.Divide
+     PPJoy2.Digital8 = Keyboard2.Multiply
+     PPJoy2.Digital9 = Keyboard2.NUMPAD0
+     PPJoy2.Digital10 = Keyboard2.NUMPADDOT
+     PPJoy2.Digital11 = Keyboard2.NUMPADENTER
+     PPJoy2.Digital12 = Keyboard2.End
+     PPJoy2.Digital13 = Keyboard2.NUMPADMINUS
+     PPJoy2.Digital14 = Keyboard2.Pageup
+     PPJoy2.Digital15 = Keyboard2.Pagedown
   endif
 
   var.deltax2 = Delta(mouse2.DirectInputX)
@@ -121,7 +160,7 @@ if mouse2.present then
   if var.Mouse2y > screen.DesktopBottom then var.Mouse2y = screen.DesktopBottom
 
   /* ***
-  * When using MousePad.cfg in L4D:
+  * When using MousePad_l4d2.cfg in L4D:
   * PPJoy2.Analog0 == joy_advaxisx inside MousePad.cfg (set to 4 == (look left and right))
   * PPJoy2.Analog1 == joy_advaxisy inside MousePad.cfg (set to 2 == (look up and down))
   *** */
